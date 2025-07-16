@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Database Bot WA</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+    .login-container, .dashboard-container {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 20px;
+      background: #1e293b;
+      border-radius: 8px;
+      box-shadow: 0 0 20px #000;
+      text-align: center;
+    }
+    input {
+      display: block;
+      width: 90%;
+      margin: 10px auto;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #0ea5e9;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #334155;
+      text-align: center;
+    }
+    .actions {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container" id="loginBox">
+    <h2>Login Admin</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="dashboard-container" id="dashboard" style="display:none;">
+    <h1>Database WhatsApp Bot</h1>
+    <div class="actions">
+      <input type="text" id="newNumber" placeholder="Nomor WhatsApp (cth: 628xxxx)" />
+      <button onclick="addNumber()">Tambah Nomor</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nomor</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="numberList"></tbody>
+    </table>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const adminUsername = "admin";
+    const adminPassword = "admin123";
+
+    async function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (user === adminUsername && pass === adminPassword) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        await loadDatabase();
+      } else {
+        alert("Login gagal!");
+      }
+    }
+
+    function logout() {
+      document.getElementById("loginBox").style.display = "block";
+      document.getElementById("dashboard").style.display = "none";
+    }
+
+    async function loadDatabase() {
+      const res = await fetch('/database');
+      const db = await res.json();
+      const tbody = document.getElementById("numberList");
+      tbody.innerHTML = "";
+      db.nomer.forEach(n => {
+        const status = db.aktif.includes(n) ? "Aktif" : "Offline";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${n}</td><td>${status}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function addNumber() {
+      const number = document.getElementById("newNumber").value;
+      if (!number.startsWith("628")) {
+        alert("Nomor harus diawali dengan 628...");
+        return;
+      }
+      await fetch("/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nomor: number })
+      });
+      loadDatabase();
+    }
+  </script>
+</body>
+</html>
